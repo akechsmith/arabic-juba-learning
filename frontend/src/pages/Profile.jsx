@@ -123,7 +123,7 @@ const Profile = () => {
               }`}
             >
               <tab.icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>

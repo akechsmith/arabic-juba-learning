@@ -63,29 +63,6 @@ const Dashboard = () => {
         </p>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
-          >
-            <div className="flex items-center space-x-4">
-              <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white">{stat.value}</p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
