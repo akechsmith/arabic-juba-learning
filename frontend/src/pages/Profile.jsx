@@ -1,48 +1,85 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, Star, Trophy, Calendar, Settings, LogOut, Moon, Sun, Mail, Award, Flame, Target } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useProgress } from '../context/ProgressContext';
-import { useTheme } from '../context/ThemeContext';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  User,
+  Star,
+  Trophy,
+  Calendar,
+  Settings,
+  LogOut,
+  Moon,
+  Sun,
+  Mail,
+  Award,
+  Flame,
+  Target,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useProgress } from "../context/ProgressContext";
+import { useTheme } from "../context/ThemeContext";
 
 const Profile = () => {
   const { currentUser, logout } = useAuth();
   const { progress, resetProgress } = useProgress();
   const { isDark, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [isResettingProgress, setIsResettingProgress] = useState(false);
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: User },
-    { id: 'achievements', label: 'Achievements', icon: Trophy },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: "overview", label: "Overview", icon: User },
+    { id: "achievements", label: "Achievements", icon: Trophy },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   // FIXED: Use totalXp instead of totalXP
   const stats = [
-    { label: 'Total XP', value: progress.totalXp || 0, icon: Star, color: 'text-yellow-500' },
-    { label: 'Current Level', value: progress.level || 1, icon: Trophy, color: 'text-purple-500' },
-    { label: 'Lessons Completed', value: progress.completedLessons?.length || 0, icon: User, color: 'text-blue-500' },
-    { label: 'Current Streak', value: `${progress.streak || 0} days`, icon: Calendar, color: 'text-orange-500' }
+    {
+      label: "Total XP",
+      value: progress.totalXp || 0,
+      icon: Star,
+      color: "text-yellow-500",
+    },
+    {
+      label: "Current Level",
+      value: progress.level || 1,
+      icon: Trophy,
+      color: "text-purple-500",
+    },
+    {
+      label: "Lessons Completed",
+      value: progress.completedLessons?.length || 0,
+      icon: User,
+      color: "text-blue-500",
+    },
+    {
+      label: "Current Streak",
+      value: `${progress.streak || 0} days`,
+      icon: Calendar,
+      color: "text-orange-500",
+    },
   ];
 
   const handleLogout = async () => {
     try {
       await logout();
     } catch (error) {
-      console.error('Failed to log out:', error);
+      console.error("Failed to log out:", error);
     }
   };
 
   const handleResetProgress = async () => {
-    if (window.confirm('Are you sure you want to reset all your progress? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to reset all your progress? This action cannot be undone."
+      )
+    ) {
       try {
         setIsResettingProgress(true);
         await resetProgress();
-        alert('Progress reset successfully!');
+        alert("Progress reset successfully!");
       } catch (error) {
-        console.error('Failed to reset progress:', error);
-        alert('Failed to reset progress. Please try again.');
+        console.error("Failed to reset progress:", error);
+        alert("Failed to reset progress. Please try again.");
       } finally {
         setIsResettingProgress(false);
       }
@@ -55,74 +92,81 @@ const Profile = () => {
       return badge.icon;
     }
     // Fallback icons based on badge type
-    if (badge.id.startsWith('level_')) return '🏆';
-    if (badge.id.startsWith('streak_')) return '🔥';
-    if (badge.id.startsWith('lessons_')) return '📚';
-    if (badge.id.startsWith('xp_')) return '⭐';
-    return '🎖️';
+    if (badge.id.startsWith("level_")) return "🏆";
+    if (badge.id.startsWith("streak_")) return "🔥";
+    if (badge.id.startsWith("lessons_")) return "📚";
+    if (badge.id.startsWith("xp_")) return "⭐";
+    return "🎖️";
   };
 
   const getBadgeColor = (badge) => {
-    if (badge.id.startsWith('level_')) return 'bg-purple-100 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800';
-    if (badge.id.startsWith('streak_')) return 'bg-orange-100 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800';
-    if (badge.id.startsWith('lessons_')) return 'bg-blue-100 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
-    if (badge.id.startsWith('xp_')) return 'bg-yellow-100 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
-    return 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600';
+    if (badge.id.startsWith("level_"))
+      return "bg-purple-100 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800";
+    if (badge.id.startsWith("streak_"))
+      return "bg-orange-100 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800";
+    if (badge.id.startsWith("lessons_"))
+      return "bg-blue-100 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800";
+    if (badge.id.startsWith("xp_"))
+      return "bg-yellow-100 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800";
+    return "bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600";
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-20 sm:pb-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="text-center mb-6 sm:mb-8"
       >
-        <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
           {currentUser?.photoURL ? (
             <img
               src={currentUser.photoURL}
               alt="Profile"
-              className="w-24 h-24 rounded-full object-cover"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
             />
           ) : (
-            <span className="text-white font-bold text-3xl">
-              {currentUser?.displayName?.charAt(0) || currentUser?.email?.charAt(0) || 'U'}
+            <span className="text-white font-bold text-2xl sm:text-3xl">
+              {currentUser?.displayName?.charAt(0) ||
+                currentUser?.email?.charAt(0) ||
+                "U"}
             </span>
           )}
         </div>
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-          {currentUser?.displayName || 'Arabic Juba Learner'}
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
+          {currentUser?.displayName || "Arabic Juba Learner"}
         </h1>
         <div className="flex items-center justify-center space-x-2 mt-2">
-          <Mail className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-          <p className="text-gray-600 dark:text-gray-300">
+          <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
             {currentUser?.email}
           </p>
         </div>
-        
+
         {/* Level Badge */}
-        <div className="mt-4 inline-flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/20 px-4 py-2 rounded-full">
-          <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+        <div className="mt-3 sm:mt-4 inline-flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/20 px-3 sm:px-4 py-2 rounded-full">
+          <Trophy className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
+          <span className="text-xs sm:text-sm font-medium text-blue-800 dark:text-blue-200">
             Level {progress.level || 1} Learner
           </span>
         </div>
       </motion.div>
 
       {/* Tab Navigation */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-6 sm:mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-1 shadow-lg border border-gray-200 dark:border-gray-700">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-md transition-colors text-xs sm:text-sm ${
                 activeTab === tab.id
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
               }`}
             >
-              <tab.icon className="h-4 w-4" />
+              <tab.icon className="h-3 w-3 sm:h-4 sm:w-4" />
+              {/* Always visible text */}
               <span>{tab.label}</span>
             </button>
           ))}
@@ -131,31 +175,33 @@ const Profile = () => {
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <motion.div
             key="overview"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
           >
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6 border border-gray-200 dark:border-gray-700"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 sm:p-4 lg:p-6 border border-gray-200 dark:border-gray-700"
                 >
-                  <div className="flex items-center space-x-3">
-                    <stat.icon className={`h-5 w-5 lg:h-6 lg:w-6 ${stat.color}`} />
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                    <stat.icon
+                      className={`h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 ${stat.color} self-center sm:self-auto`}
+                    />
+                    <div className="text-center sm:text-left">
                       <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">
                         {stat.label}
                       </p>
-                      <p className="text-lg lg:text-xl font-bold text-gray-800 dark:text-white">
+                      <p className="text-sm sm:text-lg lg:text-xl font-bold text-gray-800 dark:text-white">
                         {stat.value}
                       </p>
                     </div>
@@ -166,31 +212,36 @@ const Profile = () => {
 
             {/* Recent Achievements Preview */}
             {progress.badges && progress.badges.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white mb-3 sm:mb-4">
                   Recent Achievements
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 gap-2 sm:gap-3">
                   {progress.badges.slice(-3).map((badge, index) => (
                     <div
                       key={badge.id}
-                      className={`flex items-center space-x-3 p-3 rounded-lg border ${getBadgeColor(badge)}`}
+                      className={`flex items-center space-x-3 p-3 rounded-lg border ${getBadgeColor(
+                        badge
+                      )}`}
                     >
-                      <span className="text-2xl">{getBadgeIcon(badge)}</span>
-                      <div>
+                      <span className="text-xl sm:text-2xl">
+                        {getBadgeIcon(badge)}
+                      </span>
+                      <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-800 dark:text-white text-sm">
                           {badge.name}
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400">
-                          {badge.earnedAt && new Date(badge.earnedAt).toLocaleDateString()}
+                          {badge.earnedAt &&
+                            new Date(badge.earnedAt).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
                 <button
-                  onClick={() => setActiveTab('achievements')}
-                  className="mt-4 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline"
+                  onClick={() => setActiveTab("achievements")}
+                  className="mt-3 sm:mt-4 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-medium hover:underline"
                 >
                   View all achievements →
                 </button>
@@ -199,34 +250,38 @@ const Profile = () => {
           </motion.div>
         )}
 
-        {activeTab === 'achievements' && (
+        {activeTab === "achievements" && (
           <motion.div
             key="achievements"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
           >
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white mb-3 sm:mb-4">
               Your Badges ({progress.badges?.length || 0})
             </h3>
-            
+
             {progress.badges && progress.badges.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:gap-4">
                 {progress.badges.map((badge, index) => (
                   <motion.div
                     key={badge.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`flex items-center space-x-3 p-4 rounded-lg border ${getBadgeColor(badge)}`}
+                    className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg border ${getBadgeColor(
+                      badge
+                    )}`}
                   >
-                    <span className="text-3xl">{getBadgeIcon(badge)}</span>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-800 dark:text-white">
+                    <span className="text-2xl sm:text-3xl">
+                      {getBadgeIcon(badge)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-800 dark:text-white text-sm sm:text-base">
                         {badge.name}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 line-clamp-2">
                         {badge.description}
                       </div>
                       {badge.earnedAt && (
@@ -239,15 +294,16 @@ const Profile = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Award className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400 mb-2">
+              <div className="text-center py-8 sm:py-12">
+                <Award className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 dark:text-gray-600 mx-auto mb-3 sm:mb-4" />
+                <p className="text-gray-500 dark:text-gray-400 mb-2 text-sm sm:text-base">
                   No badges earned yet!
                 </p>
-                <p className="text-sm text-gray-400 dark:text-gray-500">
-                  Complete lessons and maintain streaks to earn your first badges
+                <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">
+                  Complete lessons and maintain streaks to earn your first
+                  badges
                 </p>
-                <div className="mt-4 space-y-2 text-xs text-gray-400 dark:text-gray-500">
+                <div className="mt-3 sm:mt-4 space-y-2 text-xs text-gray-400 dark:text-gray-500">
                   <div className="flex items-center justify-center space-x-1">
                     <Target className="h-3 w-3" />
                     <span>Complete 5 lessons for your first badge</span>
@@ -262,59 +318,61 @@ const Profile = () => {
           </motion.div>
         )}
 
-        {activeTab === 'settings' && (
+        {activeTab === "settings" && (
           <motion.div
             key="settings"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
           >
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white mb-4 sm:mb-6">
               Settings
             </h3>
-            
-            <div className="space-y-6">
+
+            <div className="space-y-4 sm:space-y-6">
               {/* Theme Setting */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
                   {isDark ? (
-                    <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                    <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" />
                   ) : (
-                    <Sun className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                    <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" />
                   )}
-                  <div>
-                    <p className="font-medium text-gray-800 dark:text-white">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-800 dark:text-white text-sm sm:text-base">
                       Theme
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       Switch between light and dark mode
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={toggleTheme}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    isDark ? 'bg-blue-600' : 'bg-gray-200'
+                  className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full transition-colors ${
+                    isDark ? "bg-blue-600" : "bg-gray-200"
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      isDark ? 'translate-x-6' : 'translate-x-1'
+                    className={`inline-block h-3 w-3 sm:h-4 sm:w-4 transform rounded-full bg-white transition-transform ${
+                      isDark
+                        ? "translate-x-5 sm:translate-x-6"
+                        : "translate-x-1"
                     }`}
                   />
                 </button>
               </div>
 
               {/* Account Info */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="flex items-center space-x-3 mb-3">
-                  <Mail className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                  <div>
-                    <p className="font-medium text-gray-800 dark:text-white">
+              <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-800 dark:text-white text-sm sm:text-base">
                       Account Email
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                       {currentUser?.email}
                     </p>
                   </div>
@@ -322,33 +380,34 @@ const Profile = () => {
               </div>
 
               {/* Progress Reset */}
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                <div className="flex items-start justify-between">
+              <div className="p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
                   <div className="flex-1">
-                    <p className="font-medium text-red-800 dark:text-red-200">
+                    <p className="font-medium text-red-800 dark:text-red-200 text-sm sm:text-base">
                       Reset Progress
                     </p>
-                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                      This will delete all your progress, badges, and streak data permanently.
+                    <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 mt-1">
+                      This will delete all your progress, badges, and streak
+                      data permanently.
                     </p>
                   </div>
                   <button
                     onClick={handleResetProgress}
                     disabled={isResettingProgress}
-                    className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
+                    className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs sm:text-sm rounded-lg transition-colors"
                   >
-                    {isResettingProgress ? 'Resetting...' : 'Reset'}
+                    {isResettingProgress ? "Resetting..." : "Reset"}
                   </button>
                 </div>
               </div>
 
               {/* Logout Button */}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-600">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm sm:text-base"
                 >
-                  <LogOut className="h-5 w-5" />
+                  <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Sign Out</span>
                 </button>
               </div>

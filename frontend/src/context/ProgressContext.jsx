@@ -27,82 +27,185 @@ export const ProgressProvider = ({ children }) => {
     level: 1,
     badges: [],
     completedLessons: [],
-    currentLesson: "L1_01", // Start with first lesson
+    currentLesson: "L1_01",
     lastLoginDate: null,
     lastCompletedAt: null,
-    displayName: null, // Add display name to progress
+    displayName: null,
   });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
+  // Improved display name extraction
+  const getDisplayName = (user) => {
+    if (!user) return null;
+    
+    // Priority order for display names
+    if (user.displayName && !user.displayName.startsWith('User ')) {
+      return user.displayName;
+    }
+    
+    if (user.email) {
+      const emailName = user.email.split('@')[0];
+      // Capitalize and clean up email username
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    }
+    
+    return `Learner ${user.uid.slice(0, 6)}`;
+  };
+
   // Load progress when component mounts or user changes
   useEffect(() => {
-    if (currentUser) {
-      loadFirestoreProgress();
-    } else {
-      loadLocalProgress();
-    }
+    let isMounted = true; // Prevent state updates if component unmounted
+    
+    const loadUserProgress = async () => {
+      if (!isMounted) return;
+      
+      if (currentUser) {
+        await loadFirestoreProgress(isMounted);
+      } else {
+        if (isMounted) {
+          // Reset to default when no user (logged out)
+          const defaultProgress = {
+            totalXp: 0,
+            streak: 0,
+            level: 1,
+            badges: [],
+            completedLessons: [],
+            currentLesson: "L1_01",
+            lastLoginDate: null,
+            lastCompletedAt: null,
+            displayName: null,
+          };
+          setProgress(defaultProgress);
+          setLoading(false);
+        }
+      }
+    };
+
+    loadUserProgress();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [currentUser]);
 
-  // Firestore operations
-  const loadFirestoreProgress = async () => {
+  // Firestore operations with better error handling
+  const loadFirestoreProgress = async (isMounted = true) => {
+    if (!currentUser || !isMounted) return;
+
     try {
       setSyncing(true);
       const progressRef = doc(db, "userProgress", currentUser.uid);
       const progressSnap = await getDoc(progressRef);
 
+      if (!isMounted) return; // Component unmounted during async operation
+
       if (progressSnap.exists()) {
         const firestoreData = progressSnap.data();
-
-        // Convert Firestore timestamps back to JavaScript dates
+        
+        // Ensure data integrity
         const normalizedProgress = {
-          totalXp: firestoreData.totalXp || 0,
-          streak: firestoreData.streak || 0,
-          level: firestoreData.level || 1,
-          badges: Array.isArray(firestoreData.badges)
-            ? firestoreData.badges
-            : [],
-          completedLessons: Array.isArray(firestoreData.completedLessons)
-            ? firestoreData.completedLessons
+          totalXp: Math.max(0, firestoreData.totalXp || 0),
+          streak: Math.max(0, firestoreData.streak || 0),
+          level: Math.max(1, firestoreData.level || 1),
+          badges: Array.isArray(firestoreData.badges) ? firestoreData.badges : [],
+          completedLessons: Array.isArray(firestoreData.completedLessons) 
+            ? firestoreData.completedLessons 
             : [],
           currentLesson: firestoreData.currentLesson || "L1_01",
           lastLoginDate: firestoreData.lastLoginDate?.toDate() || null,
           lastCompletedAt: firestoreData.lastCompletedAt || null,
-          displayName: firestoreData.displayName || currentUser.displayName || null,
+          displayName: firestoreData.displayName || getDisplayName(currentUser),
         };
 
-        setProgress(normalizedProgress);
-        console.log("Loaded progress from Firestore:", normalizedProgress);
-
-        // Update display name if it's missing or needs improvement
-        if (currentUser && (!normalizedProgress.displayName || normalizedProgress.displayName.startsWith('User '))) {
-          const betterDisplayName = currentUser.displayName || 
-                                   currentUser.email?.split('@')[0] || 
-                                   `Learner ${currentUser.uid.slice(0, 6)}`;
-          
-          await updateProgress({ displayName: betterDisplayName });
-          normalizedProgress.displayName = betterDisplayName;
-        } else if (currentUser?.displayName && currentUser.displayName !== normalizedProgress.displayName) {
-          // Update if Auth display name has changed
-          await updateProgress({ displayName: currentUser.displayName });
-          normalizedProgress.displayName = currentUser.displayName;
+        // Update display name if needed
+        const currentDisplayName = getDisplayName(currentUser);
+        if (currentDisplayName !== normalizedProgress.displayName) {
+          normalizedProgress.displayName = currentDisplayName;
+          // Update in Firestore asynchronously
+          updateDoc(progressRef, { displayName: currentDisplayName }).catch(console.error);
         }
 
-        // Also save locally as backup
+        setProgress(normalizedProgress);
+        console.log("✅ Loaded progress from Firestore:", normalizedProgress);
+
+        // Backup to localStorage
         saveLocalProgress(normalizedProgress);
       } else {
         // No Firestore data - check for local data to migrate
-        await migrateLocalToFirestore();
+        await migrateLocalToFirestore(isMounted);
       }
     } catch (error) {
-      console.error(
-        "Error loading Firestore progress, falling back to local:",
-        error
-      );
-      loadLocalProgress();
+      console.error("❌ Error loading Firestore progress:", error);
+      
+      if (isMounted) {
+        // Fallback to localStorage with user's display name
+        loadLocalProgressWithUser();
+      }
     } finally {
-      setSyncing(false);
-      setLoading(false);
+      if (isMounted) {
+        setSyncing(false);
+        setLoading(false);
+      }
+    }
+  };
+
+  const loadLocalProgressWithUser = () => {
+    try {
+      const savedProgress = localStorage.getItem("arabicJubaProgress");
+      let localProgress;
+      
+      if (savedProgress) {
+        const parsed = JSON.parse(savedProgress);
+        localProgress = {
+          totalXp: Math.max(0, parsed.totalXp || 0),
+          streak: Math.max(0, parsed.streak || 0),
+          level: Math.max(1, parsed.level || 1),
+          badges: Array.isArray(parsed.badges) ? parsed.badges : [],
+          completedLessons: Array.isArray(parsed.completedLessons) 
+            ? parsed.completedLessons 
+            : [],
+          currentLesson: parsed.currentLesson || "L1_01",
+          lastLoginDate: parsed.lastLoginDate ? new Date(parsed.lastLoginDate) : null,
+          lastCompletedAt: parsed.lastCompletedAt || null,
+          displayName: getDisplayName(currentUser), // Always use current user's name
+        };
+      } else {
+        // Fresh start with proper display name
+        localProgress = {
+          totalXp: 0,
+          streak: 0,
+          level: 1,
+          badges: [],
+          completedLessons: [],
+          currentLesson: "L1_01",
+          lastLoginDate: null,
+          lastCompletedAt: null,
+          displayName: getDisplayName(currentUser),
+        };
+      }
+
+      setProgress(localProgress);
+      console.log("📱 Loaded progress from localStorage with user:", localProgress);
+      
+      // Try to sync to Firestore in background
+      if (currentUser) {
+        saveFirestoreProgress(localProgress).catch(console.error);
+      }
+    } catch (error) {
+      console.error("❌ Error loading local progress:", error);
+      // Set safe defaults
+      setProgress({
+        totalXp: 0,
+        streak: 0,
+        level: 1,
+        badges: [],
+        completedLessons: [],
+        currentLesson: "L1_01",
+        lastLoginDate: null,
+        lastCompletedAt: null,
+        displayName: getDisplayName(currentUser),
+      });
     }
   };
 
@@ -113,159 +216,110 @@ export const ProgressProvider = ({ children }) => {
       setSyncing(true);
       const progressRef = doc(db, "userProgress", currentUser.uid);
 
-      // Ensure display name is always set when saving to Firestore
       const dataToSave = {
         ...progressData,
-        displayName: progressData.displayName || 
-                    currentUser.displayName || 
-                    currentUser.email?.split('@')[0] || 
-                    `User ${currentUser.uid.slice(0, 8)}`,
+        displayName: progressData.displayName || getDisplayName(currentUser),
         lastLoginDate: progressData.lastLoginDate ? serverTimestamp() : null,
         updatedAt: serverTimestamp(),
+        // Ensure arrays are never null
+        badges: Array.isArray(progressData.badges) ? progressData.badges : [],
+        completedLessons: Array.isArray(progressData.completedLessons) 
+          ? progressData.completedLessons 
+          : [],
       };
 
       await setDoc(progressRef, dataToSave, { merge: true });
-      console.log("Progress saved to Firestore");
+      console.log("✅ Progress saved to Firestore");
       return true;
     } catch (error) {
-      console.error("Error saving to Firestore:", error);
+      console.error("❌ Error saving to Firestore:", error);
       return false;
     } finally {
       setSyncing(false);
     }
   };
 
-  const migrateLocalToFirestore = async () => {
+  const migrateLocalToFirestore = async (isMounted = true) => {
+    if (!isMounted || !currentUser) return;
+
     try {
       const localData = localStorage.getItem("arabicJubaProgress");
-      if (localData && currentUser) {
+      let migrationData;
+      
+      if (localData) {
         const parsed = JSON.parse(localData);
-        console.log("Migrating local progress to Firestore:", parsed);
-
-        const normalizedProgress = {
-          totalXp: parsed.totalXp || 0,
-          streak: parsed.streak || 0,
-          level: parsed.level || 1,
+        migrationData = {
+          totalXp: Math.max(0, parsed.totalXp || 0),
+          streak: Math.max(0, parsed.streak || 0),
+          level: Math.max(1, parsed.level || 1),
           badges: Array.isArray(parsed.badges) ? parsed.badges : [],
-          completedLessons: Array.isArray(parsed.completedLessons)
-            ? parsed.completedLessons
+          completedLessons: Array.isArray(parsed.completedLessons) 
+            ? parsed.completedLessons 
             : [],
           currentLesson: parsed.currentLesson || "L1_01",
-          lastLoginDate: parsed.lastLoginDate
-            ? new Date(parsed.lastLoginDate)
-            : null,
+          lastLoginDate: parsed.lastLoginDate ? new Date(parsed.lastLoginDate) : null,
           lastCompletedAt: parsed.lastCompletedAt || null,
-          displayName: parsed.displayName || currentUser.displayName || null,
+          displayName: getDisplayName(currentUser), // Use current user's name
         };
-
-        setProgress(normalizedProgress);
-        await saveFirestoreProgress(normalizedProgress);
-        console.log("Migration completed successfully");
+        console.log("🔄 Migrating local progress to Firestore");
       } else {
-        // No local data either - use defaults with current user info
-        console.log("No local data found, using defaults");
-        const defaultProgress = {
+        // Fresh start for new user
+        migrationData = {
           totalXp: 0,
           streak: 0,
           level: 1,
           badges: [],
           completedLessons: [],
           currentLesson: "L1_01",
-          lastLoginDate: null,
+          lastLoginDate: new Date(),
           lastCompletedAt: null,
-          displayName: currentUser?.displayName || null,
+          displayName: getDisplayName(currentUser),
         };
-        setProgress(defaultProgress);
-        updateStreakOnLogin();
-        // Save initial progress to Firestore
-        if (currentUser) {
-          await saveFirestoreProgress(defaultProgress);
-        }
+        console.log("🆕 Creating fresh progress for new user");
+      }
+
+      if (isMounted) {
+        setProgress(migrationData);
+        await saveFirestoreProgress(migrationData);
+        console.log("✅ Migration completed successfully");
       }
     } catch (error) {
-      console.error("Error during migration:", error);
-      loadLocalProgress();
-    }
-  };
-
-  // Local storage operations (fallback when offline or not authenticated)
-  const loadLocalProgress = () => {
-    try {
-      const savedProgress = localStorage.getItem("arabicJubaProgress");
-      if (savedProgress) {
-        const parsed = JSON.parse(savedProgress);
-
-        // Ensure all required fields exist with proper defaults
-        const normalizedProgress = {
-          totalXp: parsed.totalXp || 0,
-          streak: parsed.streak || 0,
-          level: parsed.level || 1,
-          badges: Array.isArray(parsed.badges) ? parsed.badges : [],
-          completedLessons: Array.isArray(parsed.completedLessons)
-            ? parsed.completedLessons
-            : [],
-          currentLesson: parsed.currentLesson || "L1_01",
-          lastLoginDate: parsed.lastLoginDate
-            ? new Date(parsed.lastLoginDate)
-            : null,
-          lastCompletedAt: parsed.lastCompletedAt || null,
-          displayName: parsed.displayName || currentUser?.displayName || null,
-        };
-
-        setProgress(normalizedProgress);
-        console.log("Loaded progress from localStorage:", normalizedProgress);
-      } else {
-        console.log("No saved progress found, using defaults");
-        // Update streak on first load
-        updateStreakOnLogin();
+      console.error("❌ Error during migration:", error);
+      if (isMounted) {
+        loadLocalProgressWithUser();
       }
-    } catch (error) {
-      console.error("Error loading local progress:", error);
-      // Set safe defaults on error
-      setProgress({
-        totalXp: 0,
-        streak: 0,
-        level: 1,
-        badges: [],
-        completedLessons: [],
-        currentLesson: "L1_01",
-        lastLoginDate: null,
-        lastCompletedAt: null,
-        displayName: currentUser?.displayName || null,
-      });
     }
-    setLoading(false);
   };
 
   const saveLocalProgress = (newProgress) => {
     try {
-      localStorage.setItem("arabicJubaProgress", JSON.stringify(newProgress));
-      console.log("Progress saved locally as backup");
+      // Always save the most up-to-date display name
+      const progressToSave = {
+        ...newProgress,
+        displayName: newProgress.displayName || getDisplayName(currentUser),
+      };
+      localStorage.setItem("arabicJubaProgress", JSON.stringify(progressToSave));
+      console.log("💾 Progress saved locally");
     } catch (error) {
-      console.error("Error saving local progress:", error);
+      console.error("❌ Error saving local progress:", error);
     }
   };
 
   const updateProgress = async (updates) => {
     try {
-      const newProgress = { ...progress, ...updates };
-
-      // Ensure badges is always an array
-      if (!Array.isArray(newProgress.badges)) {
-        newProgress.badges = [];
-      }
-
-      // Ensure completedLessons is always an array
-      if (!Array.isArray(newProgress.completedLessons)) {
-        newProgress.completedLessons = [];
-      }
-
-      // Ensure display name is set
-      if (!newProgress.displayName && currentUser) {
-        newProgress.displayName = currentUser.displayName || 
-                                 currentUser.email?.split('@')[0] || 
-                                 `User ${currentUser.uid.slice(0, 8)}`;
-      }
+      const newProgress = { 
+        ...progress, 
+        ...updates,
+        // Always ensure proper display name
+        displayName: updates.displayName || progress.displayName || getDisplayName(currentUser),
+        // Ensure arrays are always arrays
+        badges: Array.isArray(updates.badges || progress.badges) 
+          ? (updates.badges || progress.badges) 
+          : [],
+        completedLessons: Array.isArray(updates.completedLessons || progress.completedLessons)
+          ? (updates.completedLessons || progress.completedLessons)
+          : [],
+      };
 
       // Update state immediately for instant feedback
       setProgress(newProgress);
@@ -277,13 +331,13 @@ export const ProgressProvider = ({ children }) => {
       if (currentUser) {
         const success = await saveFirestoreProgress(newProgress);
         if (!success) {
-          console.warn("Firestore sync failed, but local save succeeded");
+          console.warn("⚠️ Firestore sync failed, but local save succeeded");
         }
       }
 
       return newProgress;
     } catch (error) {
-      console.error("Error updating progress:", error);
+      console.error("❌ Error updating progress:", error);
       throw error;
     }
   };
@@ -294,21 +348,18 @@ export const ProgressProvider = ({ children }) => {
       (lesson) => lesson.id === currentLessonId
     );
     if (currentIndex === -1 || currentIndex === allLessons.length - 1) {
-      return null; // No next lesson
+      return null;
     }
     return allLessons[currentIndex + 1].id;
   };
 
   // Award badges based on milestones
   const checkAndAwardBadges = (newProgress) => {
-    // Ensure badges is an array
-    const currentBadges = Array.isArray(newProgress.badges)
-      ? newProgress.badges
-      : [];
+    const currentBadges = Array.isArray(newProgress.badges) ? newProgress.badges : [];
     const newBadges = [...currentBadges];
     let badgesAwarded = [];
 
-    // LEVEL COMPLETION BADGES (All 4 Levels)
+    // LEVEL COMPLETION BADGES
     const levelCompletionBadges = [
       {
         id: "level_1_complete",
@@ -354,7 +405,7 @@ export const ProgressProvider = ({ children }) => {
       }
     });
 
-    // STREAK BADGES (Extended Range)
+    // STREAK BADGES
     const streakBadges = [
       {
         id: "streak_3",
@@ -407,7 +458,7 @@ export const ProgressProvider = ({ children }) => {
       }
     });
 
-    // LESSON COMPLETION BADGES (Progressive Milestones)
+    // LESSON COMPLETION BADGES
     const lessonBadges = [
       {
         id: "lessons_5",
@@ -454,8 +505,7 @@ export const ProgressProvider = ({ children }) => {
     ];
 
     lessonBadges.forEach((badge) => {
-      const hasEarnedBadge =
-        newProgress.completedLessons.length >= badge.lessonsRequired;
+      const hasEarnedBadge = newProgress.completedLessons.length >= badge.lessonsRequired;
       const alreadyHasBadge = newBadges.some((b) => b.id === badge.id);
 
       if (hasEarnedBadge && !alreadyHasBadge) {
@@ -514,39 +564,6 @@ export const ProgressProvider = ({ children }) => {
       }
     });
 
-    // SPECIAL CURRICULUM BADGES
-    const specialBadges = [
-      {
-        id: "curriculum_master",
-        name: "Curriculum Master",
-        description: "Completed the entire Arabic Juba curriculum",
-        icon: "👑",
-        specialRequirement: () => newProgress.completedLessons.length >= 56,
-      }, // Total curriculum lessons
-      {
-        id: "cultural_explorer",
-        name: "Cultural Explorer",
-        description: "Deep understanding of South Sudanese culture",
-        icon: "🌍",
-        specialRequirement: () =>
-          newProgress.level >= 4 && newProgress.completedLessons.length >= 45,
-      },
-    ];
-
-    specialBadges.forEach((badge) => {
-      const hasEarnedBadge = badge.specialRequirement();
-      const alreadyHasBadge = newBadges.some((b) => b.id === badge.id);
-
-      if (hasEarnedBadge && !alreadyHasBadge) {
-        const newBadge = {
-          ...badge,
-          earnedAt: new Date().toISOString(),
-        };
-        newBadges.push(newBadge);
-        badgesAwarded.push(newBadge);
-      }
-    });
-
     return { newBadges, badgesAwarded };
   };
 
@@ -554,20 +571,16 @@ export const ProgressProvider = ({ children }) => {
     try {
       // Prevent duplicate completion
       if (progress.completedLessons.includes(lessonId)) {
-        console.log("Lesson already completed:", lessonId);
+        console.log("⚠️ Lesson already completed:", lessonId);
         return progress;
       }
 
-      console.log(`Completing lesson ${lessonId} with ${xpGained} XP`);
+      console.log(`🎯 Completing lesson ${lessonId} with ${xpGained} XP`);
 
       const newTotalXp = progress.totalXp + xpGained;
       const newCompletedLessons = [...progress.completedLessons, lessonId];
-
-      // Level up logic - every 100 XP = new level
       const newLevel = Math.floor(newTotalXp / 100) + 1;
       const leveledUp = newLevel > progress.level;
-
-      // Get next lesson
       const nextLessonId = getNextLessonId(lessonId, allLessons);
 
       const baseUpdates = {
@@ -575,9 +588,9 @@ export const ProgressProvider = ({ children }) => {
         completedLessons: newCompletedLessons,
         level: newLevel,
         lastCompletedAt: new Date().toISOString(),
-        currentLesson: nextLessonId || progress.currentLesson, // Keep current if no next lesson
-        badges: Array.isArray(progress.badges) ? progress.badges : [], // Ensure badges array exists
-        displayName: progress.displayName || currentUser?.displayName || null, // Ensure display name is preserved
+        currentLesson: nextLessonId || progress.currentLesson,
+        badges: progress.badges || [],
+        displayName: progress.displayName || getDisplayName(currentUser),
       };
 
       // Update streak (once per day)
@@ -588,29 +601,22 @@ export const ProgressProvider = ({ children }) => {
 
       let streakUpdates = {};
       if (lastCompletedDate !== todayString) {
-        // First lesson of the day
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayString = yesterday.toDateString();
 
         if (lastCompletedDate === yesterdayString) {
-          // Consecutive day - increase streak
           streakUpdates.streak = progress.streak + 1;
         } else if (!lastCompletedDate) {
-          // First ever lesson
           streakUpdates.streak = 1;
         } else {
-          // Gap in days - reset streak
           streakUpdates.streak = 1;
         }
         streakUpdates.lastLoginDate = new Date();
       }
 
       const preliminaryUpdates = { ...baseUpdates, ...streakUpdates };
-
-      // Check for badges
-      const { newBadges, badgesAwarded } =
-        checkAndAwardBadges(preliminaryUpdates);
+      const { newBadges, badgesAwarded } = checkAndAwardBadges(preliminaryUpdates);
       const finalUpdates = {
         ...preliminaryUpdates,
         badges: newBadges,
@@ -618,30 +624,19 @@ export const ProgressProvider = ({ children }) => {
 
       const updatedProgress = await updateProgress(finalUpdates);
 
-      // Log achievements
       if (leveledUp) {
-        console.log(`Level up! Now level ${newLevel}`);
+        console.log(`🆙 Level up! Now level ${newLevel}`);
       }
       if (streakUpdates.streak && streakUpdates.streak > progress.streak) {
-        console.log(`Streak updated! Now ${streakUpdates.streak} days`);
+        console.log(`🔥 Streak updated! Now ${streakUpdates.streak} days`);
       }
       if (badgesAwarded.length > 0) {
-        console.log(
-          `Badges awarded:`,
-          badgesAwarded.map((b) => b.name)
-        );
+        console.log(`🏆 Badges awarded:`, badgesAwarded.map((b) => b.name));
       }
-
-      console.log(
-        "Lesson completed successfully:",
-        lessonId,
-        "New XP:",
-        updatedProgress.totalXp
-      );
 
       return updatedProgress;
     } catch (error) {
-      console.error("Error completing lesson:", error);
+      console.error("❌ Error completing lesson:", error);
       throw error;
     }
   };
@@ -657,21 +652,19 @@ export const ProgressProvider = ({ children }) => {
 
         let newStreak = progress.streak;
         if (lastLogin === yesterday.toDateString()) {
-          // Don't auto-increment on login, only on lesson completion
           newStreak = progress.streak;
         } else if (lastLogin && lastLogin !== today) {
-          // Gap detected - reset streak to 0 (will become 1 when first lesson completed)
           newStreak = 0;
         }
 
         await updateProgress({
           streak: newStreak,
           lastLoginDate: new Date(),
-          displayName: progress.displayName || currentUser?.displayName || null,
+          displayName: progress.displayName || getDisplayName(currentUser),
         });
       }
     } catch (error) {
-      console.error("Error updating streak on login:", error);
+      console.error("❌ Error updating streak on login:", error);
     }
   };
 
@@ -686,23 +679,21 @@ export const ProgressProvider = ({ children }) => {
         currentLesson: "L1_01",
         lastLoginDate: null,
         lastCompletedAt: null,
-        displayName: currentUser?.displayName || null,
+        displayName: getDisplayName(currentUser), // Preserve user's name
       };
 
       await updateProgress(resetData);
-      console.log("Progress reset successfully");
+      console.log("🔄 Progress reset successfully");
     } catch (error) {
-      console.error("Error resetting progress:", error);
+      console.error("❌ Error resetting progress:", error);
       throw error;
     }
   };
 
   const getNextUnlockedLesson = (allLessons) => {
-    // Find the first lesson that isn't completed and meets requirements
     return allLessons.find((lesson) => {
       if (progress.completedLessons.includes(lesson.id)) return false;
-      if (lesson.required_xp && lesson.required_xp > progress.totalXp)
-        return false;
+      if (lesson.required_xp && lesson.required_xp > progress.totalXp) return false;
       if (lesson.prerequisites && lesson.prerequisites.length > 0) {
         return lesson.prerequisites.every((prereqId) =>
           progress.completedLessons.includes(prereqId)
@@ -712,17 +703,15 @@ export const ProgressProvider = ({ children }) => {
     });
   };
 
-  // Get lessons available for practice (completed lessons)
   const getPracticeLessons = (allLessons) => {
     return allLessons.filter((lesson) =>
       progress.completedLessons.includes(lesson.id)
     );
   };
 
-  // Manual sync function for when users want to force sync
   const syncWithFirestore = async () => {
     if (!currentUser) {
-      console.warn("Cannot sync: user not authenticated");
+      console.warn("⚠️ Cannot sync: user not authenticated");
       return false;
     }
 
@@ -730,14 +719,14 @@ export const ProgressProvider = ({ children }) => {
       setSyncing(true);
       const success = await saveFirestoreProgress(progress);
       if (success) {
-        console.log("Manual sync completed successfully");
+        console.log("✅ Manual sync completed successfully");
         return true;
       } else {
-        console.error("Manual sync failed");
+        console.error("❌ Manual sync failed");
         return false;
       }
     } catch (error) {
-      console.error("Error during manual sync:", error);
+      console.error("❌ Error during manual sync:", error);
       return false;
     } finally {
       setSyncing(false);
@@ -751,11 +740,13 @@ export const ProgressProvider = ({ children }) => {
     updateProgress,
     completeLesson,
     updateStreak: updateStreakOnLogin,
-    loadProgress: currentUser ? loadFirestoreProgress : loadLocalProgress,
+    loadProgress: currentUser ? loadFirestoreProgress : loadLocalProgressWithUser,
     resetProgress,
     getNextUnlockedLesson,
     getPracticeLessons,
     syncWithFirestore,
+    // Expose display name getter
+    getDisplayName: () => getDisplayName(currentUser),
   };
 
   return (

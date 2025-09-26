@@ -16,6 +16,29 @@ const Dashboard = () => {
     updateStreak();
   }, []);
 
+  // Improved display name logic
+  const getDisplayName = () => {
+    // First priority: use display name from progress (most up-to-date)
+    if (progress.displayName && !progress.displayName.startsWith('User ') && !progress.displayName.startsWith('Learner')) {
+      return progress.displayName;
+    }
+    
+    // Second priority: use current user's display name
+    if (currentUser?.displayName && !currentUser.displayName.startsWith('User ')) {
+      return currentUser.displayName;
+    }
+    
+    // Third priority: extract from email
+    if (currentUser?.email) {
+      const emailName = currentUser.email.split('@')[0];
+      // Capitalize and clean up email username
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    }
+    
+    // Fallback
+    return 'Learner';
+  };
+
   const stats = [
     {
       icon: Flame,
@@ -55,8 +78,8 @@ const Dashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-4 sm:py-8"
       >
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-2">
-          Welcome back, {currentUser?.displayName || 'Learner'}! 👋
+        <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 dark:text-white mb-2">
+          Welcome back, {getDisplayName()}! 👋
         </h1>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
           Ready to continue your Arabic Juba journey?
