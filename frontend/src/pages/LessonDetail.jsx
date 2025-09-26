@@ -49,23 +49,14 @@ const LessonDetail = () => {
   const { completeLesson, progress } = useProgress();
 
   const [lesson, setLesson] = useState(null);
-  const [currentSection, setCurrentSection] = useState("intro"); // intro, content, exercises
+  const [currentSection, setCurrentSection] = useState("intro");
   const [currentExercise, setCurrentExercise] = useState(0);
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showVocabulary, setShowVocabulary] = useState(true);
 
-  // Debug logging
   useEffect(() => {
-    console.log("🔍 Current progress:", progress);
-    console.log("📚 Current lesson:", lesson);
-    console.log("🎯 Current exercise:", currentExercise);
-    console.log("💯 Current score:", score);
-  }, [progress, lesson, currentExercise, score]);
-
-  useEffect(() => {
-    // Find lesson from all curriculum levels
     const allLessons = [
       ...LEVEL_1_BASICS,
       ...LEVEL_2_GREETINGS,
@@ -76,7 +67,6 @@ const LessonDetail = () => {
 
     if (foundLesson) {
       setLesson(foundLesson);
-      // Reset to introduction state when lesson changes
       setCurrentSection("intro");
       setCurrentExercise(0);
       setScore(0);
@@ -91,12 +81,6 @@ const LessonDetail = () => {
   }, [id, navigate]);
 
   const handleExerciseComplete = (isCorrect) => {
-    console.log("🎮 Exercise completed:", {
-      isCorrect,
-      currentExercise,
-      lesson: lesson?.id,
-    });
-
     if (!lesson.exercises || !lesson.exercises[currentExercise]) {
       console.error("No exercise data found");
       return;
@@ -105,23 +89,18 @@ const LessonDetail = () => {
     const currentExerciseData = lesson.exercises[currentExercise];
 
     if (isCorrect) {
-      // Use a default point value if points field doesn't exist
       const pointsEarned = currentExerciseData.points || 10;
       const newScore = score + pointsEarned;
       setScore(newScore);
       toast.success("Correct! Well done!");
-      console.log("✅ Correct answer! Score:", newScore);
     } else {
       toast.error("Try again next time!");
-      console.log("❌ Incorrect answer");
     }
 
     setTimeout(() => {
       if (currentExercise < lesson.exercises.length - 1) {
-        console.log("➡️ Moving to next exercise:", currentExercise + 1);
         setCurrentExercise(currentExercise + 1);
       } else {
-        console.log("🏁 All exercises completed, finishing lesson");
         handleLessonComplete();
       }
     }, 2000);
@@ -129,20 +108,11 @@ const LessonDetail = () => {
 
   const handleLessonComplete = async () => {
     try {
-      console.log(
-        "🎊 Attempting to complete lesson:",
-        lesson.id,
-        "XP reward:",
-        lesson.reward_xp
-      );
-
       const result = await completeLesson(lesson.id, lesson.reward_xp);
-      console.log("✅ Lesson completion result:", result);
-
       setCompleted(true);
       toast.success(`Lesson completed! +${lesson.reward_xp} XP earned!`);
     } catch (error) {
-      console.error("❌ Failed to complete lesson:", error);
+      console.error("Failed to complete lesson:", error);
       toast.error(`Failed to save progress: ${error.message}`);
     }
   };
@@ -152,26 +122,18 @@ const LessonDetail = () => {
       const audio = new Audio(audioUrl);
       audio.play().catch(console.error);
     } else {
-      // Fallback: show that audio would play
       toast("Audio would play here", { icon: "🔊" });
     }
   };
 
   const getNextLessonId = (currentLessonId) => {
-    // Parse the current lesson ID to determine the next one
     const match = currentLessonId.match(/^(L\d+)_(\d+)$/);
     if (!match) return null;
 
     const [, levelPrefix, lessonNum] = match;
     const currentNum = parseInt(lessonNum);
+    const nextLessonId = `${levelPrefix}_${String(currentNum + 1).padStart(2, "0")}`;
 
-    // Try the next lesson in the same level first
-    const nextLessonId = `${levelPrefix}_${String(currentNum + 1).padStart(
-      2,
-      "0"
-    )}`;
-
-    // Check if this next lesson exists by trying to find it in the current curriculum
     const allLessons = [
       ...LEVEL_1_BASICS,
       ...LEVEL_2_GREETINGS,
@@ -184,15 +146,12 @@ const LessonDetail = () => {
       return nextLessonId;
     }
 
-    // If not found in current level, try the first lesson of the next level
     const levelNum = parseInt(levelPrefix.substring(1));
     const nextLevel = levelNum + 1;
 
     if (nextLevel <= 4) {
       const nextLevelFirstLesson = `L${nextLevel}_01`;
-      const nextLevelLesson = allLessons.find(
-        (l) => l.id === nextLevelFirstLesson
-      );
+      const nextLevelLesson = allLessons.find((l) => l.id === nextLevelFirstLesson);
       if (nextLevelLesson) {
         return nextLevelFirstLesson;
       }
@@ -204,7 +163,6 @@ const LessonDetail = () => {
   const handleNextLesson = async () => {
     const nextLessonId = getNextLessonId(lesson.id);
 
-    // For lessons without exercises (levels 3 & 4), mark current lesson as completed
     if (!lesson.exercises || lesson.exercises.length === 0) {
       try {
         await completeLesson(lesson.id, lesson.reward_xp);
@@ -217,30 +175,22 @@ const LessonDetail = () => {
     }
 
     if (nextLessonId) {
-      console.log(`Navigating to next lesson: ${nextLessonId}`);
-      // Reset all state before navigating to ensure clean start
       setCurrentSection("intro");
       setCurrentExercise(0);
       setScore(0);
       setCompleted(false);
       setShowVocabulary(true);
 
-      // Determine the level of the next lesson
       const nextLessonMatch = nextLessonId.match(/^L(\d+)_/);
-      const nextLessonLevel = nextLessonMatch
-        ? parseInt(nextLessonMatch[1])
-        : lesson.level;
+      const nextLessonLevel = nextLessonMatch ? parseInt(nextLessonMatch[1]) : lesson.level;
 
-      // Try to navigate to the next lesson - use /lessons/ to match your routing
       try {
         navigate(`/lessons/${nextLessonId}`, {
           state: { selectedLevel: nextLessonLevel },
         });
       } catch (error) {
         console.error(`Failed to navigate to lesson ${nextLessonId}:`, error);
-        toast.error(
-          `Lesson ${nextLessonId} is not available yet. Returning to lessons.`
-        );
+        toast.error(`Lesson ${nextLessonId} is not available yet. Returning to lessons.`);
         navigate("/lessons", { state: { selectedLevel: lesson.level } });
       }
     } else {
@@ -250,9 +200,9 @@ const LessonDetail = () => {
   };
 
   const handleBackToLessons = () => {
-  const currentLevel = lesson?.level || 1;
-  navigate(`/lessons?level=${currentLevel}`);
-};
+    const currentLevel = lesson?.level || 1;
+    navigate(`/lessons?level=${currentLevel}`);
+  };
 
   const startExercises = () => {
     setCurrentSection("exercises");
@@ -268,118 +218,118 @@ const LessonDetail = () => {
   }
 
   if (!lesson) {
-  // Try to extract level from the lesson ID as fallback
-  const levelMatch = id?.match(/^L(\d+)_/);
-  const fallbackLevel = levelMatch ? parseInt(levelMatch[1]) : 1;
-  
-  return (
-    <div className="text-center py-12">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-        Lesson Not Found
-      </h2>
-      <button
-        onClick={() => navigate(`/lessons?level=${fallbackLevel}`)}
-        className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-      >
-        Back to Lessons
-      </button>
-    </div>
-  );
-}
+    const levelMatch = id?.match(/^L(\d+)_/);
+    const fallbackLevel = levelMatch ? parseInt(levelMatch[1]) : 1;
+    
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+          Lesson Not Found
+        </h2>
+        <button
+          onClick={() => navigate(`/lessons?level=${fallbackLevel}`)}
+          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+        >
+          Back to Lessons
+        </button>
+      </div>
+    );
+  }
 
   if (completed) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-2xl mx-auto text-center py-12"
-      >
+      <div className="pb-20 sm:pb-6">
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring" }}
-          className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-2xl mx-auto text-center py-12"
         >
-          <CheckCircle className="h-12 w-12 text-white" />
-        </motion.div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
+            <CheckCircle className="h-12 w-12 text-white" />
+          </motion.div>
 
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
-          أحسنت! Well Done!
-        </h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-4">
+            أحسنت! Well Done!
+          </h2>
 
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
-          You earned{" "}
-          <span className="font-bold text-blue-600">{lesson.reward_xp} XP</span>{" "}
-          and scored{" "}
-          <span className="font-bold text-green-600">{score} points</span>!
-        </p>
-
-        {/* Lesson Summary */}
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 mb-6 text-left">
-          <h3 className="font-bold text-green-800 dark:text-green-200 mb-2">
-            What you learned:
-          </h3>
-          <p className="text-green-700 dark:text-green-300 text-sm">
-            {lesson.description}
+          <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm sm:text-base">
+            You earned{" "}
+            <span className="font-bold text-blue-600">{lesson.reward_xp} XP</span>{" "}
+            and scored{" "}
+            <span className="font-bold text-green-600">{score} points</span>!
           </p>
-        </div>
 
-        <div className="space-x-4">
-          <button
-            onClick={handleBackToLessons}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-          >
-            Back to Lessons
-          </button>
-          <button
-            onClick={handleNextLesson}
-            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
-          >
-            Next Lesson
-          </button>
-        </div>
-      </motion.div>
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 sm:p-6 mb-6 text-left">
+            <h3 className="font-bold text-green-800 dark:text-green-200 mb-2 text-sm sm:text-base">
+              What you learned:
+            </h3>
+            <p className="text-green-700 dark:text-green-300 text-xs sm:text-sm">
+              {lesson.description}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-center">
+            <button
+              onClick={handleBackToLessons}
+              className="w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Back to Lessons
+            </button>
+            <button
+              onClick={handleNextLesson}
+              className="w-full sm:w-auto px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Next Lesson
+            </button>
+          </div>
+        </motion.div>
+      </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-20 sm:pb-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
+        className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4"
       >
         <button
           onClick={() => navigate("/lessons")}
-          className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors self-start"
         >
           <ArrowLeft className="h-5 w-5" />
           <span>Back to Lessons</span>
         </button>
 
-        <div className="text-right">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+        <div className="text-left sm:text-right">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
             {lesson.title}
           </h1>
-          <p className="text-sm text-blue-600 dark:text-blue-400 italic">
+          <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 italic">
             {lesson.transliteration_title}
           </p>
-          <div className="flex items-center justify-end space-x-4 text-sm text-gray-600 dark:text-gray-300 mt-2">
+          <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-2">
             <span className="flex items-center space-x-1">
-              <Star className="h-4 w-4" />
+              <Star className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Level {lesson.level}</span>
             </span>
             <span className="flex items-center space-x-1">
-              <BookOpen className="h-4 w-4" />
+              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="capitalize">{lesson.lesson_type}</span>
             </span>
             <span className="flex items-center space-x-1">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>{lesson.estimated_duration} min</span>
             </span>
             <span className="flex items-center space-x-1">
-              <Trophy className="h-4 w-4" />
+              <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>{lesson.reward_xp} XP</span>
             </span>
           </div>
@@ -391,19 +341,19 @@ const LessonDetail = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-6 mb-8 border border-amber-200 dark:border-amber-800"
+          className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 border border-amber-200 dark:border-amber-800"
         >
-          <div className="flex items-start space-x-4">
-            <Globe className="h-6 w-6 text-amber-600 dark:text-amber-400 mt-1 flex-shrink-0" />
+          <div className="flex items-start space-x-3 sm:space-x-4">
+            <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 dark:text-amber-400 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-bold text-amber-800 dark:text-amber-200 mb-2">
+              <h3 className="font-bold text-amber-800 dark:text-amber-200 mb-2 text-sm sm:text-base">
                 South Sudanese Cultural Context
               </h3>
-              <p className="text-amber-700 dark:text-amber-300 mb-2">
+              <p className="text-amber-700 dark:text-amber-300 mb-2 text-xs sm:text-sm">
                 <span className="font-semibold">Background:</span>{" "}
                 {lesson.cultural_context.background}
               </p>
-              <p className="text-amber-700 dark:text-amber-300">
+              <p className="text-amber-700 dark:text-amber-300 text-xs sm:text-sm">
                 <span className="font-semibold">Cultural Note:</span>{" "}
                 {lesson.cultural_context.cultural_note}
               </p>
@@ -414,12 +364,12 @@ const LessonDetail = () => {
 
       {/* Progress Bar for Exercises */}
       {currentSection === "exercises" && lesson.exercises && (
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Exercise Progress
             </span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               {currentExercise + 1} / {lesson.exercises.length}
             </span>
           </div>
@@ -427,9 +377,7 @@ const LessonDetail = () => {
             <motion.div
               initial={{ width: 0 }}
               animate={{
-                width: `${
-                  ((currentExercise + 1) / lesson.exercises.length) * 100
-                }%`,
+                width: `${((currentExercise + 1) / lesson.exercises.length) * 100}%`,
               }}
               className="bg-blue-500 h-2 rounded-full transition-all duration-500"
             />
@@ -446,30 +394,30 @@ const LessonDetail = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center space-x-3 mb-6">
-                <BookOpen className="h-6 w-6 text-blue-500" />
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white">
                   Lesson Introduction
                 </h2>
               </div>
 
-              <p className="text-gray-600 dark:text-gray-300 text-lg mb-6 leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-lg mb-4 sm:mb-6 leading-relaxed">
                 {lesson.content?.introduction || lesson.description}
               </p>
 
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button
                   onClick={() => setCurrentSection("content")}
-                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+                  className="w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
                 >
                   <span>Start Learning</span>
-                  <Target className="h-5 w-5" />
+                  <Target className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
                 {lesson.exercises && lesson.exercises.length > 0 && (
                   <button
                     onClick={startExercises}
-                    className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                    className="w-full sm:w-auto px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
                   >
                     Skip to Exercises
                   </button>
@@ -486,51 +434,50 @@ const LessonDetail = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            {/* Main Vocabulary Section */}
             {lesson.content?.vocabulary && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center space-x-2">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white flex items-center space-x-2">
                     <span>📚</span>
                     <span>Vocabulary</span>
                   </h3>
                   <button
                     onClick={() => setShowVocabulary(!showVocabulary)}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     {showVocabulary ? "Hide" : "Show"} Details
                   </button>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                   {lesson.content.vocabulary.map((item, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800"
+                      className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 sm:p-6 border border-blue-200 dark:border-blue-800"
                     >
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-3">
                         <div className="flex-1">
-                          <div className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                          <div className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
                             {item.arabic}
                           </div>
-                          <div className="text-blue-600 dark:text-blue-400 font-medium mb-1">
+                          <div className="text-blue-600 dark:text-blue-400 font-medium mb-1 text-sm sm:text-base">
                             {item.transliteration}
                           </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2">
                             {item.pronunciation}
                           </div>
-                          <div className="text-lg text-gray-700 dark:text-gray-300">
+                          <div className="text-sm sm:text-lg text-gray-700 dark:text-gray-300">
                             {item.english}
                           </div>
                         </div>
                         <button
                           onClick={() => playAudio(item.audio_url)}
-                          className="p-3 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 rounded-full transition-colors ml-4"
+                          className="self-start sm:self-center p-2 sm:p-3 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 rounded-full transition-colors"
                         >
-                          <Volume2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                          <Volume2 className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
                         </button>
                       </div>
 
@@ -538,15 +485,14 @@ const LessonDetail = () => {
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-700"
+                          className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-blue-200 dark:border-blue-700"
                         >
-                          {/* Example Sentence */}
                           {item.example_sentence && (
                             <div className="mb-3">
                               <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
                                 📝 Example:
                               </div>
-                              <div className="text-sm">
+                              <div className="text-xs sm:text-sm">
                                 <div className="font-semibold text-gray-800 dark:text-gray-200">
                                   {item.example_sentence.arabic}
                                 </div>
@@ -559,64 +505,6 @@ const LessonDetail = () => {
                               </div>
                             </div>
                           )}
-
-                          {/* Cultural Example */}
-                          {item.cultural_example && (
-                            <div className="mb-3">
-                              <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1">
-                                🌍 Cultural Example:
-                              </div>
-                              <div className="text-sm text-gray-700 dark:text-gray-300 italic">
-                                {item.cultural_example}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Usage Context */}
-                          {item.usage_context && (
-                            <div className="mb-3">
-                              <div className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">
-                                💡 Usage Context:
-                              </div>
-                              <div className="text-sm text-gray-700 dark:text-gray-300">
-                                {item.usage_context}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Additional properties that might exist */}
-                          {item.slang_level && (
-                            <div className="mb-3">
-                              <div className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">
-                                🗣️ Slang Level:
-                              </div>
-                              <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                                {item.slang_level}
-                              </div>
-                            </div>
-                          )}
-
-                          {item.formality && (
-                            <div className="mb-3">
-                              <div className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 mb-1">
-                                🎯 Formality:
-                              </div>
-                              <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                                {item.formality}
-                              </div>
-                            </div>
-                          )}
-
-                          {item.response && (
-                            <div className="mb-3">
-                              <div className="text-xs font-semibold text-pink-600 dark:text-pink-400 mb-1">
-                                🔄 Proper Response:
-                              </div>
-                              <div className="text-sm text-gray-700 dark:text-gray-300">
-                                {item.response}
-                              </div>
-                            </div>
-                          )}
                         </motion.div>
                       )}
                     </motion.div>
@@ -625,25 +513,24 @@ const LessonDetail = () => {
               </div>
             )}
 
-            {/* Navigation */}
-            <div className="flex justify-center space-x-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
               <button
                 onClick={() => setCurrentSection("intro")}
-                className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                className="w-full sm:w-auto px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
               >
                 Back to Introduction
               </button>
               {lesson.exercises && lesson.exercises.length > 0 ? (
                 <button
                   onClick={startExercises}
-                  className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                  className="w-full sm:w-auto px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
                 >
                   Start Exercises
                 </button>
               ) : (
                 <button
                   onClick={handleNextLesson}
-                  className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                  className="w-full sm:w-auto px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
                 >
                   Next Lesson
                 </button>
@@ -659,29 +546,30 @@ const LessonDetail = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center space-x-3 mb-6">
-                <Target className="h-6 w-6 text-green-500" />
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                  Exercise {currentExercise + 1}
-                </h2>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-8 border border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-4 sm:mb-6">
+                <div className="flex items-center space-x-3">
+                  <Target className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white">
+                    Exercise {currentExercise + 1}
+                  </h2>
+                </div>
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   {getDialogueTitle(lesson.exercises[currentExercise]?.type)}
                 </span>
               </div>
 
               {lesson.exercises[currentExercise] && (
                 <div>
-                  {/* Exercise Scenario */}
                   {lesson.exercises[currentExercise].scenario && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 border border-blue-200 dark:border-blue-800">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-blue-200 dark:border-blue-800">
                       <div className="flex items-start space-x-3">
-                        <Info className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
+                        <Info className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mt-1 flex-shrink-0" />
                         <div>
-                          <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">
+                          <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-1 text-sm sm:text-base">
                             Scenario
                           </h3>
-                          <p className="text-blue-700 dark:text-blue-300 text-sm">
+                          <p className="text-blue-700 dark:text-blue-300 text-xs sm:text-sm">
                             {lesson.exercises[currentExercise].scenario}
                           </p>
                         </div>
@@ -689,16 +577,15 @@ const LessonDetail = () => {
                     </div>
                   )}
 
-                  {/* Cultural Context for Exercise */}
                   {lesson.exercises[currentExercise].cultural_context && (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 mb-6 border border-amber-200 dark:border-amber-800">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-amber-200 dark:border-amber-800">
                       <div className="flex items-start space-x-3">
-                        <Globe className="h-5 w-5 text-amber-500 mt-1 flex-shrink-0" />
+                        <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 mt-1 flex-shrink-0" />
                         <div>
-                          <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                          <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1 text-sm sm:text-base">
                             Cultural Context
                           </h3>
-                          <p className="text-amber-700 dark:text-amber-300 text-sm">
+                          <p className="text-amber-700 dark:text-amber-300 text-xs sm:text-sm">
                             {lesson.exercises[currentExercise].cultural_context}
                           </p>
                         </div>
@@ -706,53 +593,35 @@ const LessonDetail = () => {
                     </div>
                   )}
 
-                  {/* Main Exercise Question */}
-                  <div className="mb-6">
-                    {/* Multiple Choice Component with error handling */}
+                  <div className="mb-4 sm:mb-6">
                     {lesson.exercises[currentExercise].question &&
                     lesson.exercises[currentExercise].options &&
                     lesson.exercises[currentExercise].options.length > 0 &&
-                    lesson.exercises[currentExercise].correct_answer !==
-                      undefined ? (
+                    lesson.exercises[currentExercise].correct_answer !== undefined ? (
                       <MultipleChoice
                         question={lesson.exercises[currentExercise].question}
                         options={lesson.exercises[currentExercise].options}
-                        correctAnswer={
-                          lesson.exercises[currentExercise].correct_answer
-                        }
-                        explanation={
-                          lesson.exercises[currentExercise].explanation || ""
-                        }
+                        correctAnswer={lesson.exercises[currentExercise].correct_answer}
+                        explanation={lesson.exercises[currentExercise].explanation || ""}
                         onComplete={handleExerciseComplete}
                         allowMultipleCorrect={false}
                       />
                     ) : (
                       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                        <p className="text-yellow-800 dark:text-yellow-200">
-                          Exercise data is incomplete. Please check the lesson
-                          configuration.
+                        <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                          Exercise data is incomplete. Please check the lesson configuration.
                         </p>
-                        <pre className="text-xs mt-2 text-yellow-700 dark:text-yellow-300">
-                          {JSON.stringify(
-                            lesson.exercises[currentExercise],
-                            null,
-                            2
-                          )}
-                        </pre>
                       </div>
                     )}
                   </div>
 
-                  {/* Exercise Score Display */}
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Exercise {currentExercise + 1} of{" "}
-                        {lesson.exercises.length}
+                      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        Exercise {currentExercise + 1} of {lesson.exercises.length}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Points: {lesson.exercises[currentExercise].points || 10}{" "}
-                        XP
+                      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        Points: {lesson.exercises[currentExercise].points || 10} XP
                       </div>
                     </div>
                   </div>
@@ -763,20 +632,18 @@ const LessonDetail = () => {
         )}
       </AnimatePresence>
 
-      {/* Current Score Display */}
       {currentSection === "exercises" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 text-center"
+          className="mt-4 sm:mt-6 text-center"
         >
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-            <div className="text-lg font-semibold text-gray-800 dark:text-white">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
+            <div className="text-sm sm:text-lg font-semibold text-gray-800 dark:text-white">
               Current Score:{" "}
-              <span className="text-blue-600 dark:text-blue-400">{score}</span>{" "}
-              points
+              <span className="text-blue-600 dark:text-blue-400">{score}</span> points
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
               Potential XP: {lesson.reward_xp}
             </div>
           </div>

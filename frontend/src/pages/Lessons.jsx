@@ -19,22 +19,9 @@ const Lessons = () => {
   const levelFromUrl = urlParams.get("level");
 
   const [selectedLevel, setSelectedLevel] = useState(
-  parseInt(levelFromUrl) || location.state?.selectedLevel || 1
-);
-
-console.log("Level from URL:", levelFromUrl);
-console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.selectedLevel || 1);
-
-  console.log("🔍 Level from URL:", levelFromUrl);
-  console.log(
-    "🔍 Final selectedLevel:",
     parseInt(levelFromUrl) || location.state?.selectedLevel || 1
   );
 
-  console.log(
-    "🔍 Initial selectedLevel set to:",
-    location.state?.selectedLevel || 1
-  );
   // Combine all lessons from curriculum data
   useEffect(() => {
     const allLessons = [
@@ -132,16 +119,16 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
   );
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-20 sm:pb-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="text-center mb-6 sm:mb-8"
       >
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-2">
           Arabic Juba Lessons
         </h1>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
           Master Arabic Juba through structured lessons focused on South
           Sudanese culture
         </p>
@@ -152,9 +139,9 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="mb-8"
+        className="mb-6 sm:mb-8"
       >
-        <div className="flex flex-wrap justify-center gap-4 mb-6">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           {CURRICULUM_STRUCTURE.levels.map((level) => {
             const isUnlocked =
               progress.totalXp >=
@@ -163,24 +150,28 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
               <button
                 key={level.id}
                 onClick={() => setSelectedLevel(level.id)}
-                disabled={!isUnlocked}
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                className={`px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-300 ${
                   selectedLevel === level.id
                     ? "bg-blue-500 text-white shadow-lg"
-                    : isUnlocked
-                    ? "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-400 border border-gray-200 dark:border-gray-700 cursor-not-allowed opacity-50"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700"
+                } ${
+                  !isUnlocked
+                    ? "opacity-60 relative"
+                    : ""
                 }`}
               >
                 <div className="text-left">
-                  <div className="font-bold">Level {level.id}</div>
+                  <div className="font-bold text-sm sm:text-base">Level {level.id}</div>
                   <div className="text-xs opacity-90">{level.title}</div>
                   {!isUnlocked && (
-                    <div className="text-xs text-red-400 mt-1">
-                      Requires{" "}
-                      {CURRICULUM_STRUCTURE.xp_thresholds[`level_${level.id}`]}{" "}
-                      XP
-                    </div>
+                    <>
+                      <div className="text-xs text-red-400 mt-1">
+                        Requires{" "}
+                        {CURRICULUM_STRUCTURE.xp_thresholds[`level_${level.id}`]}{" "}
+                        XP
+                      </div>
+                      <Lock className="absolute -top-1 -right-1 h-3 w-3 text-red-400 bg-white dark:bg-gray-800 rounded-full p-0.5" />
+                    </>
                   )}
                 </div>
               </button>
@@ -190,32 +181,32 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
 
         {/* Current Level Info */}
         {currentLevelInfo && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-2">
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h2 className="text-lg sm:text-xl font-bold text-blue-800 dark:text-blue-200 mb-2">
                   {currentLevelInfo.title}
-                  <span className="text-sm font-normal text-blue-600 dark:text-blue-400 ml-2">
+                  <span className="text-xs sm:text-sm font-normal text-blue-600 dark:text-blue-400 ml-2 block sm:inline">
                     ({currentLevelInfo.transliteration})
                   </span>
                 </h2>
-                <p className="text-blue-700 dark:text-blue-300 mb-2">
+                <p className="text-sm sm:text-base text-blue-700 dark:text-blue-300 mb-3">
                   {currentLevelInfo.description}
                 </p>
-                <div className="flex items-center space-x-4 text-sm text-blue-600 dark:text-blue-400">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-blue-600 dark:text-blue-400">
                   <span>📚 {currentLevelInfo.lessons} lessons</span>
                   <span>⭐ {currentLevelInfo.total_xp} total XP</span>
                   <span>🎯 {currentLevelInfo.focus}</span>
                 </div>
               </div>
-              <BookOpen className="h-12 w-12 text-blue-500" />
+              <BookOpen className="h-8 w-8 sm:h-12 sm:w-12 text-blue-500 self-center sm:self-auto" />
             </div>
           </div>
         )}
       </motion.div>
 
       {/* Lessons Grid */}
-      <div className="grid gap-6">
+      <div className="grid gap-4 sm:gap-6">
         {lessons.map((lesson, index) => {
           const Icon = getLessonIcon(lesson);
           const status = getLessonStatus(lesson);
@@ -233,11 +224,11 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
                   : "hover:shadow-xl hover:scale-[1.02]"
               } transition-all duration-300`}
             >
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
+              <div className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                  <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
                     <div
-                      className={`p-3 rounded-full ${
+                      className={`p-2 sm:p-3 rounded-full flex-shrink-0 ${
                         isCompleted
                           ? "bg-green-100 dark:bg-green-900"
                           : lesson.is_locked
@@ -246,7 +237,7 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
                       }`}
                     >
                       <Icon
-                        className={`h-6 w-6 ${
+                        className={`h-4 w-4 sm:h-6 sm:w-6 ${
                           isCompleted
                             ? "text-green-600 dark:text-green-400"
                             : lesson.is_locked
@@ -256,30 +247,30 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
                       />
                     </div>
 
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className="text-2xl">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1 sm:mb-2">
+                        <span className="text-lg sm:text-2xl flex-shrink-0">
                           {getLessonTypeIcon(lesson.lesson_type)}
                         </span>
-                        <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white truncate">
                           {lesson.title}
                         </h3>
                       </div>
 
                       {lesson.transliteration_title && (
-                        <p className="text-sm text-blue-600 dark:text-blue-400 mb-1 italic">
+                        <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 mb-1 italic truncate">
                           {lesson.transliteration_title}
                         </p>
                       )}
 
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2">
                         {lesson.description}
                       </p>
 
                       {/* Cultural Context Preview */}
                       {lesson.cultural_context && (
-                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-3">
-                          <p className="text-xs text-amber-800 dark:text-amber-200">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3">
+                          <p className="text-xs text-amber-800 dark:text-amber-200 line-clamp-2">
                             <span className="font-semibold">
                               Cultural Note:
                             </span>{" "}
@@ -288,7 +279,7 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
                         </div>
                       )}
 
-                      <div className="flex items-center space-x-4">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                         <div className="flex items-center space-x-1 text-xs text-gray-500">
                           <Clock className="h-3 w-3" />
                           <span>{lesson.estimated_duration} min</span>
@@ -311,7 +302,7 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
                       {lesson.prerequisites &&
                         lesson.prerequisites.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 truncate">
                               Prerequisites: {lesson.prerequisites.join(", ")}
                             </p>
                           </div>
@@ -319,11 +310,11 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
                     </div>
                   </div>
 
-                  <div className="ml-4">
+                  <div className="w-full sm:w-auto">
                     {!lesson.is_locked ? (
                       <Link
                         to={`/lessons/${lesson.id}`}
-                        className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 ${
+                        className={`block w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-center transition-all duration-300 hover:scale-105 ${
                           isCompleted
                             ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800"
                             : "bg-blue-500 hover:bg-blue-600 text-white shadow-lg"
@@ -332,7 +323,7 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
                         {status.text}
                       </Link>
                     ) : (
-                      <div className="px-6 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium">
+                      <div className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium text-center">
                         {status.text}
                       </div>
                     )}
@@ -349,33 +340,33 @@ console.log("Final selectedLevel:", parseInt(levelFromUrl) || location.state?.se
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="mt-8 bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
+        className="mt-6 sm:mt-8 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 sm:p-6"
       >
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white mb-3 sm:mb-4">
           Your Progress
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
               {progress.completedLessons.length}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Lessons Completed
             </div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
               {progress.totalXp}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Total XP Earned
             </div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
               {Math.max(1, Math.floor(progress.totalXp / 100))}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Current Level
             </div>
           </div>

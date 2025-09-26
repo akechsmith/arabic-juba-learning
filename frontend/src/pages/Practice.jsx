@@ -55,15 +55,15 @@ const Practice = () => {
   const getLevelIcon = (lessonType) => {
     switch (lessonType) {
       case "vocabulary":
-        return <Book className="h-4 w-4" />;
+        return <Book className="h-3 w-3 sm:h-4 sm:w-4" />;
       case "conversation":
-        return <MessageSquare className="h-4 w-4" />;
+        return <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />;
       case "dictionary":
-        return <List className="h-4 w-4" />;
+        return <List className="h-3 w-3 sm:h-4 sm:w-4" />;
       case "phrases":
-        return <Lightbulb className="h-4 w-4" />;
+        return <Lightbulb className="h-3 w-3 sm:h-4 sm:w-4" />;
       default:
-        return <BookOpen className="h-4 w-4" />;
+        return <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />;
     }
   };
 
@@ -129,42 +129,42 @@ const Practice = () => {
 
   if (practiceLessons.length === 0) {
     return (
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto pb-20 sm:pb-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center mb-8"
+          className="flex items-center mb-6 sm:mb-8"
         >
           <button
             onClick={() => navigate("/")}
             className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back to Dashboard</span>
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-sm sm:text-base">Back to Dashboard</span>
           </button>
         </motion.div>
 
-        <div className="text-center py-16">
+        <div className="text-center py-12 sm:py-16">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6"
+            className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6"
           >
-            <BookOpen className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+            <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 dark:text-gray-500" />
           </motion.div>
 
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-3 sm:mb-4">
             No Completed Lessons Yet
           </h2>
 
-          <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 max-w-md mx-auto px-4">
             Complete some lessons first, then return here to practice and review
             your learning!
           </p>
 
           <button
             onClick={() => navigate("/lessons")}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+            className="w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
           >
             Start Learning
           </button>
@@ -174,26 +174,26 @@ const Practice = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-20 sm:pb-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
+        className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-0"
       >
         <button
           onClick={() => navigate("/")}
-          className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors self-start"
         >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back to Dashboard</span>
+          <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="text-sm sm:text-base">Back to Dashboard</span>
         </button>
 
-        <div className="text-right">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+        <div className="text-left sm:text-right">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
             Practice Mode
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
             Review and practice completed lessons
           </p>
         </div>
@@ -204,7 +204,7 @@ const Practice = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="flex flex-wrap gap-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg mb-8"
+        className="flex flex-wrap gap-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg mb-6 sm:mb-8"
       >
         {[
           { value: "all", label: "All Lessons" },
@@ -216,7 +216,7 @@ const Practice = () => {
           <button
             key={tab.value}
             onClick={() => setSelectedLevel(tab.value)}
-            className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
+            className={`px-3 sm:px-4 py-2 rounded-md font-medium transition-colors text-xs sm:text-sm ${
               selectedLevel === tab.value
                 ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
                 : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
@@ -232,7 +232,7 @@ const Practice = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
       >
         {filteredLessons.map((lesson, index) => {
           const colors = getLevelColor(lesson.level);
@@ -245,8 +245,8 @@ const Practice = () => {
               className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow"
             >
               {/* Lesson Header */}
-              <div className={`p-4 ${colors.bg}`}>
-                <div className="flex items-center justify-between mb-2">
+              <div className={`p-3 sm:p-4 ${colors.bg}`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2 sm:gap-0">
                   <div className="flex items-center space-x-2">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${colors.badge}`}
@@ -262,41 +262,41 @@ const Practice = () => {
                       </div>
                     )}
                   </div>
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 self-end sm:self-auto" />
                 </div>
 
-                <h3 className="font-bold text-gray-800 dark:text-white mb-1">
+                <h3 className="font-bold text-sm sm:text-base text-gray-800 dark:text-white mb-1">
                   {lesson.title}
                 </h3>
                 {lesson.transliteration_title && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 italic">
                     {lesson.transliteration_title}
                   </p>
                 )}
               </div>
 
               {/* Lesson Content */}
-              <div className="p-4">
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+              <div className="p-3 sm:p-4">
+                <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
                   {lesson.description}
                 </p>
 
-                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4 gap-2 sm:gap-0">
                   <div className="flex items-center space-x-1">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>{lesson.estimated_duration} min</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4" />
+                    <Star className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>{lesson.reward_xp} XP</span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => navigate(`/lessons/${lesson.id}`)}
-                  className={`w-full px-4 py-2 bg-gradient-to-r ${colors.button} text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2`}
+                  className={`w-full px-4 py-2 bg-gradient-to-r ${colors.button} text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base`}
                 >
-                  <Play className="h-4 w-4" />
+                  <Play className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>Practice Again</span>
                 </button>
               </div>
@@ -309,26 +309,26 @@ const Practice = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-12"
+          className="text-center py-8 sm:py-12"
         >
-          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
             {selectedLevel === "1" && (
-              <Book className="h-8 w-8 text-blue-500" />
+              <Book className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
             )}
             {selectedLevel === "2" && (
-              <MessageSquare className="h-8 w-8 text-green-500" />
+              <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
             )}
             {selectedLevel === "3" && (
-              <List className="h-8 w-8 text-purple-500" />
+              <List className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
             )}
             {selectedLevel === "4" && (
-              <Lightbulb className="h-8 w-8 text-orange-500" />
+              <Lightbulb className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500" />
             )}
           </div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white mb-2">
             No Level {selectedLevel} Lessons Completed
           </h3>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">
             Complete some Level {selectedLevel} •{" "}
             {getLevelName(parseInt(selectedLevel))} lessons to practice them
             here.

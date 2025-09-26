@@ -61,35 +61,35 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 pb-20 sm:pb-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 w-full max-w-md"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <div className="mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="mx-auto mb-3 sm:mb-4 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center">
             <img
               src="/logo.png"
               alt="Arabic Juba Logo"
-              className="w-16 h-16 object-contain"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
               onError={(e) => {
                 // Fallback to Arabic character if logo fails to load
                 e.target.style.display = 'none';
                 e.target.nextSibling.style.display = 'block';
               }}
             />
-            <span className="text-gray-800 dark:text-white font-bold text-4xl hidden">ع</span>
+            <span className="text-gray-800 dark:text-white font-bold text-3xl sm:text-4xl hidden">ع</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
             Learn Arabic Juba
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
             {isLogin ? 'Welcome back!' : 'Start your learning journey'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {!isLogin && (
             <div className="relative">
               <input
@@ -99,13 +99,13 @@ const Login = () => {
                 value={formData.displayName}
                 onChange={handleInputChange}
                 required={!isLogin}
-                className="w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full pl-4 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               />
             </div>
           )}
           
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             <input
               type="email"
               name="email"
@@ -113,12 +113,12 @@ const Login = () => {
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             <input
               type={showPassword ? "text" : "password"}
               name="password"
@@ -126,14 +126,14 @@ const Login = () => {
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full pl-9 sm:pl-10 pr-9 sm:pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPassword ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
             </button>
           </div>
 
@@ -142,13 +142,13 @@ const Login = () => {
             disabled={loading || googleLoading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 sm:py-3 text-sm sm:text-base rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
           </motion.button>
         </form>
 
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300 dark:border-gray-600" />
@@ -163,12 +163,12 @@ const Login = () => {
             disabled={loading || googleLoading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full mt-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
+            className="w-full mt-3 sm:mt-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 sm:py-3 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 sm:space-x-3 text-sm sm:text-base"
           >
             {googleLoading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
+              <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-gray-500"></div>
             ) : (
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -191,10 +191,10 @@ const Login = () => {
           </motion.button>
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-4 sm:mt-6 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-blue-500 hover:text-blue-600 text-sm font-medium"
+            className="text-blue-500 hover:text-blue-600 text-xs sm:text-sm font-medium"
             disabled={loading || googleLoading}
           >
             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}

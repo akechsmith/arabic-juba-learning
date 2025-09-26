@@ -48,28 +48,28 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 pb-20 sm:pb-6">
       {/* Welcome Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center py-8"
+        className="text-center py-4 sm:py-8"
       >
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-2">
           Welcome back, {currentUser?.displayName || 'Learner'}! 👋
         </h1>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
           Ready to continue your Arabic Juba journey?
         </p>
       </motion.div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           <ProgressCard />
           <QuickActions />
         </div>
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <StreakCard />
           <BadgesCard />
         </div>
