@@ -31,7 +31,42 @@ const Profile = () => {
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
-  // FIXED: Use totalXp instead of totalXP
+  // Improved display name logic
+  const getDisplayName = () => {
+    // First priority: use display name from progress (most up-to-date)
+    if (progress.displayName && !progress.displayName.startsWith('User ') && !progress.displayName.startsWith('Learner')) {
+      return progress.displayName;
+    }
+    
+    // Second priority: use current user's display name
+    if (currentUser?.displayName && !currentUser.displayName.startsWith('User ')) {
+      return currentUser.displayName;
+    }
+    
+    // Third priority: extract from email
+    if (currentUser?.email) {
+      const emailName = currentUser.email.split('@')[0];
+      // Capitalize and clean up email username
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    }
+    
+    // Fallback
+    return 'Arabic Juba Learner';
+  };
+
+  // Get display name for profile avatar initial
+  const getProfileInitial = () => {
+    const displayName = getDisplayName();
+    
+    // If we have a real name, use its first letter
+    if (displayName && displayName !== 'Arabic Juba Learner') {
+      return displayName.charAt(0).toUpperCase();
+    }
+    
+    // Fallback to email or generic
+    return currentUser?.email?.charAt(0)?.toUpperCase() || 'U';
+  };
+
   const stats = [
     {
       label: "Total XP",
@@ -127,14 +162,12 @@ const Profile = () => {
             />
           ) : (
             <span className="text-white font-bold text-2xl sm:text-3xl">
-              {currentUser?.displayName?.charAt(0) ||
-                currentUser?.email?.charAt(0) ||
-                "U"}
+              {getProfileInitial()}
             </span>
           )}
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
-          {currentUser?.displayName || "Arabic Juba Learner"}
+          {getDisplayName()}
         </h1>
         <div className="flex items-center justify-center space-x-2 mt-2">
           <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />
@@ -166,7 +199,6 @@ const Profile = () => {
               }`}
             >
               <tab.icon className="h-3 w-3 sm:h-4 sm:w-4" />
-              {/* Always visible text */}
               <span>{tab.label}</span>
             </button>
           ))}
@@ -374,6 +406,21 @@ const Profile = () => {
                     </p>
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                       {currentUser?.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Display Name Info */}
+              <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center space-x-3">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-blue-800 dark:text-blue-200 text-sm sm:text-base">
+                      Display Name
+                    </p>
+                    <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-300">
+                      {getDisplayName()}
                     </p>
                   </div>
                 </div>
