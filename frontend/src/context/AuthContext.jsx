@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  FacebookAuthProvider,
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
@@ -72,6 +73,50 @@ export const AuthProvider = ({ children }) => {
     return userCredential;
   };
 
+  const signInWithFacebook = async () => {
+    try {
+      const provider = new FacebookAuthProvider();
+      // Add additional scopes for better user data
+      provider.addScope('email');
+      provider.addScope('public_profile');
+      
+      const userCredential = await signInWithPopup(auth, provider);
+      const user = userCredential.user;
+      
+      // Check if user document exists, if not create it
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (!userDoc.exists()) {
+        await setDoc(doc(db, 'users', user.uid), {
+          email: user.email,
+          displayName: user.displayName,
+          createdAt: new Date(),
+          streak: 0,
+          totalXP: 0,
+          level: 1,
+          badges: [],
+          lastLoginDate: new Date()
+        });
+      }
+      
+      return userCredential;
+    } catch (error) {
+      console.error('Facebook sign in error:', error);
+      
+      // Handle specific Facebook auth errors
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign-in was cancelled');
+      } else if (error.code === 'auth/popup-blocked') {
+        throw new Error('Popup was blocked by your browser. Please allow popups and try again.');
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        throw new Error('An account with this email already exists. Try signing in with a different method.');
+      } else if (error.code === 'auth/auth-domain-config-required') {
+        throw new Error('Facebook authentication is not properly configured.');
+      } else {
+        throw new Error(error.message || 'Facebook sign-in failed');
+      }
+    }
+  };
+
   const logout = () => {
     return signOut(auth);
   };
@@ -98,6 +143,7 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signIn,
     signInWithGoogle,
+    signInWithFacebook,
     logout
   };
 
