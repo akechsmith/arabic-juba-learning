@@ -1,6 +1,6 @@
 # Arabic Juba Learning Platform
 
-A comprehensive web application for learning Arabic Juba, the dialect spoken in South Sudan. This interactive platform provides structured lessons, cultural context, and gamified learning experiences to help users master this important language.
+A comprehensive web application for learning Arabic Juba, the dialect spoken in South Sudan. This interactive platform provides structured lessons, cultural context, and gamified learning experiences to help users master this important language
 
 ## Features
 
